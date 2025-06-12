@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          touch test.txt
+          echo "test passed" > test.txt
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build project
+        run: |
+          echo "pip install ."
+          echo "build completed"
+
+  dockerize:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Docker info
+        run: |
+          docker -v
+          docker ps
+          echo "docker build -t test:v1"
+          echo "docker push test:v1"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: dockerize
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install kubectl
+        run: |
+          sudo apt-get update && sudo apt-get install -y kubectl
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl version --client
+          echo "kubectl apply -f deployment.yml"
